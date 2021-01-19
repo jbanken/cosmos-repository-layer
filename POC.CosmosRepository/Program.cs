@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using POC.CosmosRepository.DataAccess;
+using POC.CosmosRepository.DataAccess.DataEntities;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -29,7 +30,15 @@ namespace POC.CosmosRepository
 
             var dummieRepo = serviceProvider.GetService<IDummieRepository>();
 
-            var dummie = await dummieRepo.AddAsync(new DataAccess.DataEntities.DummieDataEntity() { Name = "joe", ID = Guid.NewGuid().ToString(), id = Guid.NewGuid().ToString() }, "ID");
+            var id = Guid.NewGuid().ToString();
+            var dummie = await dummieRepo.AddAsync(new DataAccess.DataEntities.DummieDataEntity() { Name = "testname", id = id, ID=id }, id);
+            dummie = await dummieRepo.GetByIDAsync<DummieDataEntity>("ID", id);
+            dummie.Name = "testname2";
+            dummie = await dummieRepo.UpdateAsync(dummie, dummie.id, dummie.ID);
+            dummie = await dummieRepo.GetByIDAsync<DummieDataEntity>("ID", dummie.ID);
+            await dummieRepo.DeleteAsync<DummieDataEntity>(dummie.id, dummie.ID);
+
+
 
         }
     }
