@@ -5,13 +5,11 @@ using System.Text;
 
 namespace POC.CosmosRepository.DataAccess
 {
-    public class DummieRepository : BaseRepository<DummieDataEntity>
+    public class DummieRepository : BaseRepository<DummieDataEntity>, IDummieRepository
     {
-        public DummieRepository(ICosmosClientFactory cosmosClientFactory)
+        public DummieRepository(ICosmosClientFactory cosmosClientFactory) : base(cosmosClientFactory, "Dummies")
         {
-            var container = cosmosClientFactory.GetContainer("Dummies");
-            base(container);
-        }
 
+        }
     }
 }

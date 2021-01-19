@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using POC.CosmosRepository.DataAccess;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace POC.CosmosRepository
@@ -13,13 +14,14 @@ namespace POC.CosmosRepository
             Console.WriteLine("Hello World!");
 
             var configBuilder = new ConfigurationBuilder()
-                  .AddJsonFile("appsettings.json", true, true);
+                .SetBasePath(Directory.GetCurrentDirectory())
+                  .AddJsonFile("appsettings.json", false, true);
 
             var config = configBuilder.Build();
 
 
             var services = new ServiceCollection();
-            services.AddSingleton(config);
+            services.AddSingleton<IConfiguration>(config);
             services.AddScoped<ICosmosClientFactory, CosmosClientFactory>();
             services.AddScoped<IDummieRepository, DummieRepository>();
 
@@ -27,7 +29,7 @@ namespace POC.CosmosRepository
 
             var dummieRepo = serviceProvider.GetService<IDummieRepository>();
 
-            var dummie = await dummieRepo.AddAsync(new DataAccess.DataEntities.DummieDataEntity() { Name = "joe" });
+            var dummie = await dummieRepo.AddAsync(new DataAccess.DataEntities.DummieDataEntity() { Name = "joe", ID = Guid.NewGuid().ToString(), id = Guid.NewGuid().ToString() }, "ID");
 
         }
     }

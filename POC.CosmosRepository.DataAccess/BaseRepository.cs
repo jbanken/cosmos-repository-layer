@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Cosmos;
+using POC.CosmosRepository.DataAccess.DataEntities;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -10,14 +11,14 @@ namespace POC.CosmosRepository.DataAccess
     public class BaseRepository<T> : IRepository<T>
     {
         private readonly Container _container;
-        public BaseRepository(Container container)
+        public BaseRepository(ICosmosClientFactory cosmosClientFactory, string containerName)
         {
-            _container = container;
+            _container = cosmosClientFactory.GetContainer(containerName);
         }
-
-        public async Task<T> AddAsync<T>(T entity, string paritionKey)
+       
+        public async Task<T> AddAsync<T>(T entity, string paritionKey) where T : BaseDataEntity
         {
-            ItemResponse<T> entityResponse = await _container.CreateItemAsync<T>(entity, new PartitionKey(paritionKey));
+            ItemResponse<T> entityResponse = await _container.CreateItemAsync<T>(entity, new PartitionKey(entity.ID));
 
             if (entityResponse.StatusCode != HttpStatusCode.Created)
             {
@@ -27,9 +28,9 @@ namespace POC.CosmosRepository.DataAccess
             return entityResponse.Resource;
 
         }
-        public async Task<T> UpdateAsync(T entity, Guid ID, string paritionKey)
+        public async Task<T> UpdateAsync<T>(T entity, string paritionKey, string paritionKeyValue) where T : BaseDataEntity
         {
-            ItemResponse<T> entityResponse = await _container.ReplaceItemAsync(entity, ID.ToString(), new PartitionKey(paritionKey));
+            ItemResponse<T> entityResponse = await _container.ReplaceItemAsync(entity, paritionKeyValue, new PartitionKey(paritionKey));
 
             if (entityResponse.StatusCode != HttpStatusCode.OK)
             {
@@ -38,9 +39,9 @@ namespace POC.CosmosRepository.DataAccess
 
             return entityResponse.Resource;
         }
-        public async Task<T> GetByIDAsync(Guid ID, string paritionKey)
+        public async Task<T> GetByIDAsync<T>(string paritionKey, string paritionKeyValue) where T : BaseDataEntity
         {
-            ItemResponse<T> entityResponse = await _container.ReadItemAsync<T>(ID.ToString(), new PartitionKey(paritionKey));
+            ItemResponse<T> entityResponse = await _container.ReadItemAsync<T>(paritionKeyValue, new PartitionKey(paritionKey));
 
             if (entityResponse.StatusCode != HttpStatusCode.OK)
             {
@@ -50,13 +51,20 @@ namespace POC.CosmosRepository.DataAccess
             return entityResponse.Resource;
 
         }
-        public async Task<(int total, IEnumerable<T> items)> GetAsync(int limit, int offset)
+        public async Task<IList<T>> GetAllAsync<T>(string partitionKey) where T : BaseDataEntity
         {
-            throw new NotImplementedException();
+
+            return new List<T>();
         }
-        public async Task DeleteAsync(Guid ID, string paritionKey)
+        public async Task DeleteAsync<T>(string paritionKey, string paritionKeyValue) where T : BaseDataEntity
         {
-            ItemResponse<T> entityResponse = await _container.DeleteItemAsync<T>(ID.ToString(), new PartitionKey(paritionKey));
+            ItemResponse<T> entityResponse = await _container.DeleteItemAsync<T>(paritionKeyValue, new PartitionKey(paritionKey));
+            if (entityResponse.StatusCode != HttpStatusCode.NoContent)
+            {
+                throw new Exception($"DeleteAsync() returned ${ entityResponse.StatusCode }");
+            }
         }
+
+      
     }
 }

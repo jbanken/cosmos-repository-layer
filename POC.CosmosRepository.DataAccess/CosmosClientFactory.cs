@@ -18,9 +18,9 @@ namespace POC.CosmosRepository.DataAccess
         public CosmosClientFactory(IConfiguration configuration)
         {
             _configuration = configuration;
-            _serviceEndpointUrl = _configuration["cosmos:db:connection.serviceendpoint"];
-            _databaseName = configuration["cosmos.db.name"];
-            _authKey = configuration["cosmos.db.connection.authkey"];
+            _serviceEndpointUrl = _configuration["cosmos:db:connection:serviceendpoint"];
+            _databaseName = configuration["cosmos:db:name"];
+            _authKey = configuration["cosmos:db:connection:authkey"];
 
             //client
             _client = new CosmosClient(_serviceEndpointUrl, _authKey);
@@ -29,7 +29,7 @@ namespace POC.CosmosRepository.DataAccess
             _database = _client.CreateDatabaseIfNotExistsAsync(_databaseName).Result;
 
             //containers
-            _database.CreateContainerIfNotExistsAsync("Dummies", "/ID");
+            var container = _database.CreateContainerIfNotExistsAsync("Dummies", "/ID").Result;
         }
 
         public Database GetDatabase()
